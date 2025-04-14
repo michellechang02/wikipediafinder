@@ -32,7 +32,7 @@ public class DemoApplication {
 		CorsConfiguration config = new CorsConfiguration();
 		config.setAllowCredentials(true);
 		config.addAllowedOrigin("http://localhost:5173"); // Frontend origin
-		config.addAllowedOrigin("https://nets1500.vercel.app"); // Frontend origin
+		config.addAllowedOrigin("https://nets1500.vercel.app"); // Second Frontend origin
 		config.addAllowedHeader("*"); // Allow all headers
 		config.addAllowedMethod("*"); // Allow all HTTP methods
 		source.registerCorsConfiguration("/**", config); // Apply configuration to all endpoints

@@ -1,6 +1,10 @@
 # nets1500
 
 
+Preview of Application
+![Wikipedia Path Finder Screenshot](screenshot.png)
+
+
 Frontend - Vite + React + TypeScript
 
 To start the frontend development server, simply run:
