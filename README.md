@@ -1,61 +1,43 @@
-# nets1500
+# NETS 1500 HW5: Final Project
+## Michelle Chang
 
+# User Manual
 
-Preview of Application
-![Wikipedia Path Finder Screenshot](screenshot.png)
+# How to run the program
 
-
-Frontend - Vite + React + TypeScript
-
-To start the frontend development server, simply run:
+1) Clone this repository (https://github.com/michellechang02/wikipediafinder)
 ```
-cd frontend
-npm install
-npm run dev
+git clone git@github.com:michellechang02/wikipediafinder.git
 ```
+2) Open IntelliJ IDEA (or open it after installing IntelliJ)
+3) Click Open, and open the backend directory (important!) in IntelliJ. It should look like the following
 
-Open your browser and visit the following URL:
-```
-http://localhost:5173/
-```
+![IntelliJ Screenshot](intellij.png)
 
-
-Backend - Java Spring Boot (Gradle)
-
-Make sure you have Java 21 installed. On MacOS, you can install it using Homebrew.
-```
-brew install openjdk@21
-```
-
-Run
-```
-java --version
-```
-To make sure you have Java 21 installed.
+4) Click the Play button on the top right to start the Java Spring Boot application. Spring Boot should be running in a terminal
 
 
-Then, to start the backend server, run:
-```
-cd backend
-./gradlew clean build
-./gradlew bootRun
-```
+![Backend Screenshot](backend.png)
 
-To make sure the backend server is running, you can visit the following URL:
+
+5) Visit the following URL in a web browser (Google Chrome recommended)
 ```
 http://localhost:8080/api/hello
 ```
 
-You should see the following response:
-```
-Hello, World!
-```
+![Hello world](world.png)
 
-The main api endpoint is:
-```
-http://localhost:8080/api/getResults?startinglink={startinglink}&endinglink={endinglink}
-```
+6) Now, in a web browser, navigate to https://nets1500.vercel.app/
 
+![Deployed](deployed.png)
+
+7) Type in a Starting Article Topic (ie. South Korea) and a Target Article Topic (ie. Hangul). Then click Find Path
+
+![Final](final.png)
+
+8) Hover and/or click to navigate to the corresponding Wikipedia Article
+
+![Hover](hover.png)
 
 
 
