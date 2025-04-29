@@ -4,7 +4,7 @@ Description:
 Wikipedia Path Finder is a web application that finds the shortest hyperlink path between two Wikipedia articles using a Breadth-First Search (BFS) algorithm.
 Users provide a starting and a target article, and the backend scrapes and traverses Wikipedia pages to determine the shortest connection path.
 The application features a modern React TypeScript frontend and a Java Spring Boot backend.
-To ensure performance, the search is limited to 1000 nodes per query with a cap of 10 outgoing links per page.
+Search is limited to 1000 nodes per query; if a path requires exploring more than 1000 nodes, the search will terminate and return null, indicating that no path was found within the computational constraints.
 The tool showcases the interplay between graph traversal algorithms and information retrieval via real-time web scraping.
 
 Categories:
