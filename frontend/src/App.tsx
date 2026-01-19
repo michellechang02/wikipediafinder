@@ -1,5 +1,6 @@
 import { useState } from "react";
 import axios from "axios";
+import { Analytics } from '@vercel/analytics/react';
 import { ResultsList } from "./components/ResultsList";
 
 function App() {
@@ -207,6 +208,7 @@ function App() {
           </div>
         </div>
       </div>
+      <Analytics/>
     </div>
   );
 }

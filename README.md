@@ -1,45 +1,40 @@
-# NETS 1500 HW5: Final Project
-## Michelle Chang
+# Wikipedia Path Finder
 
-# User Manual
+## Michelle Chang (장민지), University of Pennsylvania
 
-# How to run the program
+---
 
-1) Clone this repository (https://github.com/michellechang02/wikipediafinder)
-```
-git clone git@github.com:michellechang02/wikipediafinder.git
-```
-2) Open IntelliJ IDEA (or open it after installing IntelliJ)
-3) Click Open, and open the backend directory (important!) in IntelliJ. It should look like the following
+**Navigate to the live application:**
 
-![IntelliJ Screenshot](intellij.png)
+https://wikipedia-path-finder.vercel.app/
 
-4) Click the Play button on the top right to start the Java Spring Boot application. Spring Boot should be running in a terminal
+---
 
+Wikipedia Path Finder helps you discover the shortest path between two Wikipedia articles using Breadth-First Search (BFS). Enter any two article topics and see how they're connected through Wikipedia links!
 
-![Backend Screenshot](backend.png)
+- ⚡ **Fast:** Limited to 1000 nodes for quick results.
+- 🔗 **Simple:** Just enter your start and end topics (case sensitive, include spaces).
+- 🌐 **Accessible:** Works online and locally (see below).
 
+> **Tip:** For best results, avoid extremely distant article pairs (very long paths).
 
-5) Visit the following URL in a web browser (Google Chrome recommended)
-```
-http://localhost:8080/api/hello
-```
+---
 
-![Hello world](world.png)
+### Developer
+mɪˈʃɛl (Michelle Chang, 장민지)
 
-6) Now, in a web browser, navigate to https://nets1500.vercel.app/
+© Michelle Chang 2026
 
-![Deployed](deployed.png)
+---
 
-7) Type in a Starting Article Topic (ie. South Korea) and a Target Article Topic (ie. Hangul). Then click Find Path
+### ⭐️ Like this project?
+If you found this tool helpful, please consider starring the repository on GitHub to support future development!
 
-![Final](final.png)
+[GitHub Repository](https://github.com/michellechang02/wikipediafinder)
 
-8) Hover and/or click to navigate to the corresponding Wikipedia Article
+---
 
-![Hover](hover.png)
+### Local Development
+To run locally, clone the repository and follow the instructions in the frontend and backend README files.
 
-
-
-
-
+---
