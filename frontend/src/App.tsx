@@ -8,6 +8,8 @@ function App() {
   const [endingLink, setEndingLink] = useState<string>("");
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [nodesExplored, setNodesExplored] = useState<number>(0);
+  const currentYear = new Date().getFullYear();
+  const copyrightText = `© ${currentYear} All rights reserved.`;
 
   const fetchResults = async () => {
     try {
@@ -65,7 +67,7 @@ function App() {
             mɪˈʃɛl
           </div>
           <div className="flex items-center gap-4">
-            <div className="text-sm font-medium text-gray-600">© 2025 All rights reserved.</div>
+            <div className="text-sm font-medium text-gray-600">{copyrightText}</div>
           </div>
         </div>
 

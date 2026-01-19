@@ -1,4 +1,4 @@
-package com.example.demo;
+package com.wikipediafinder.backend;
 
 import java.io.IOException;
 import java.util.*;
@@ -24,7 +24,7 @@ public class PageNode {
      * @throws IllegalArgumentException if the input is null or does not start with the Wikipedia link prefix
      */
     public PageNode(String url) {
-        
+
         // Validate input URL
         if (url == null || url.length() < WIKI_LINK_PREFIX.length() || !url.startsWith(WIKI_LINK_PREFIX)) {
             throw new IllegalArgumentException("Invalid URL for PageNode: " + url);
@@ -93,9 +93,9 @@ public class PageNode {
      */
     private boolean isSkippableLink(String link) {
         return link.isEmpty() || link.charAt(0) == '#' ||
-                link.contains("index.php") || link.contains("File:") ||
-                link.contains("Category:") || link.contains("Help:") ||
-                link.contains("Special:") || link.contains("Wikipedia:");
+            link.contains("index.php") || link.contains("File:") ||
+            link.contains("Category:") || link.contains("Help:") ||
+            link.contains("Special:") || link.contains("Wikipedia:");
     }
 
     /*
