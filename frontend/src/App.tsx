@@ -9,37 +9,47 @@ function App() {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [nodesExplored, setNodesExplored] = useState<number>(0);
   const currentYear = new Date().getFullYear();
-  const copyrightText = `© ${currentYear} All rights reserved.`;
+  const copyrightText = `© ${currentYear} All rights reserved`;
 
   const fetchResults = async () => {
-    try {
-      setIsLoading(true);
-      setNodesExplored(0);
-      const response = await axios.get("http://localhost:8080/api/getResults", {
-        params: {
-          startinglink: `https://en.wikipedia.org/wiki/${startingLink.replace(/\s+/g, "_").replace(/\b\w/g, char => char.toUpperCase())}`,
-          endinglink: `https://en.wikipedia.org/wiki/${endingLink.replace(/\s+/g, "_").replace(/\b\w/g, char => char.toUpperCase())}`,
-        },
-      });
-      
-      if (response.data.nodesExplored) {
-        setNodesExplored(response.data.nodesExplored);
+    const endpoints = [
+      "https://wikipediafinder.onrender.com/api/getResults",
+      "http://localhost:8080/api/getResults"
+    ];
+    let lastError = null;
+    setIsLoading(true);
+    setNodesExplored(0);
+    for (const endpoint of endpoints) {
+      try {
+        const response = await axios.get(endpoint, {
+          params: {
+            startinglink: `https://en.wikipedia.org/wiki/${startingLink.replace(/\s+/g, "_").replace(/\b\w/g, char => char.toUpperCase())}`,
+            endinglink: `https://en.wikipedia.org/wiki/${endingLink.replace(/\s+/g, "_").replace(/\b\w/g, char => char.toUpperCase())}`,
+          },
+        });
+        if (response.data.nodesExplored) {
+          setNodesExplored(response.data.nodesExplored);
+        }
+        if (response.data.message) {
+          setResults([]);
+        } else {
+          setResults(response.data.path || response.data);
+        }
+        lastError = null;
+        break; // Success, exit loop
+      } catch (error) {
+        lastError = error;
+        continue; // Try next endpoint
       }
-      
-      if (response.data.message) {
-        setResults([]);
-      } else {
-        setResults(response.data.path || response.data);
-      }
-    } catch (error) {
-      if (error instanceof Error) {
-        console.error("Error fetching results:", error.message);
-      } else {
-        console.error("Unexpected error fetching results:", error);
-      }
-    } finally {
-      setIsLoading(false);
     }
+    if (lastError) {
+      if (lastError instanceof Error) {
+        console.error("Error fetching results:", lastError.message);
+      } else {
+        console.error("Unexpected error fetching results:", lastError);
+      }
+    }
+    setIsLoading(false);
   };
 
   const handleQuery = async () => {
@@ -76,11 +86,12 @@ function App() {
           <div className="lg:w-1/2">
             <div className="bg-white backdrop-blur-sm shadow-xl rounded-3xl p-8 border border-purple-100 hover:shadow-2xl hover:scale-[1.02] transition-all duration-300">
               <div className="text-center mb-8">
+
                 <h1 className="text-4xl font-bold bg-gradient-to-r from-pink-600 to-purple-800 text-transparent bg-clip-text mb-4 font-sans">
                   Wikipedia Path Finder
                 </h1>
                 <div className="mt-5">
-                  <p className="text-md text-gray-600 font-normal px-3 py-1.5 border-2 border-purple-100 rounded-lg inline-block shadow-sm hover:shadow-md transition-all duration-200">NETS 1500 Final Project • Michelle Chang</p>
+                  <p className="text-md text-gray-600 font-normal px-3 py-1.5 border-2 border-purple-100 rounded-lg inline-block shadow-sm hover:shadow-md transition-all duration-200">University of Pennsylvania • Michelle Chang (장민지)</p>
                 </div>
                 <div className="mt-4">
                   <p className="text-lg text-gray-700 font-normal font-sans">
