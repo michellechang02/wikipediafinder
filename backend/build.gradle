@@ -2,6 +2,7 @@ plugins {
 	id 'java'
 	id 'org.springframework.boot' version '3.2.1'
 	id 'io.spring.dependency-management' version '1.1.4'
+	id 'com.diffplug.spotless' version '6.20.0'
 }
 
 group = 'com.wikipediafinder'
@@ -22,6 +23,13 @@ dependencies {
 	implementation 'org.jsoup:jsoup:1.14.3'
 }
 
+spotless {
+	java {
+		googleJavaFormat('1.17.0')
+		target 'src/**/*.java'
+	}
+}
+
 tasks.named('test') {
 	useJUnitPlatform()
 }
@@ -33,3 +41,6 @@ bootJar {
 		attributes 'Start-Class': 'com.wikipediafinder.backend.WikipediaFinderApplication'
 	}
 }
+
+// Make check include spotlessCheck so style is enforced
+check.dependsOn 'spotlessCheck'
