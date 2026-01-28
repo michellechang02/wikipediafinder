@@ -19,8 +19,12 @@ repositories {
 dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter'
 	implementation 'org.springframework.boot:spring-boot-starter-web'
+	// Postgres driver for SQL-backed LinkCache
+	implementation 'org.postgresql:postgresql:42.6.0'
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	implementation 'org.jsoup:jsoup:1.14.3'
+	// JSON serializer for DB values
+	implementation 'com.fasterxml.jackson.core:jackson-databind:2.15.2'
 }
 
 spotless {

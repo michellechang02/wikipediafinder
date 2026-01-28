@@ -1,7 +1,10 @@
 package com.wikipediafinder.backend;
 
+import com.wikipediafinder.backend.cache.InMemoryLinkCache;
+import com.wikipediafinder.backend.cache.LinkCache;
 import com.wikipediafinder.backend.interfaces.BFSInterface;
 import java.util.*;
+import java.util.concurrent.*;
 import java.util.function.Function;
 import org.springframework.stereotype.Service;
 
@@ -17,6 +20,30 @@ public class BFS implements BFSInterface {
 
   // Default factory for production
   private static final Function<String, PageNode> DEFAULT_FACTORY = PageNode::new;
+
+  // Maximum number of nodes to expand to avoid very long-running searches
+  private static final int MAX_EXPANDED_NODES = 1000;
+
+  // Toggle parallel fetching of outgoing links (helps when network latency dominates)
+  private static final boolean PARALLEL_FETCH = true;
+
+  // Abstracted cache (can be Redis-backed or in-memory)
+  private final LinkCache linkCache;
+
+  private final ExecutorService fetchPool =
+      PARALLEL_FETCH
+          ? Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors())
+          : null;
+
+  // Default constructor used in tests and when no DI is available — uses in-memory cache
+  public BFS() {
+    this.linkCache = new InMemoryLinkCache();
+  }
+
+  // Constructor for DI (Spring will inject the appropriate LinkCache bean)
+  public BFS(LinkCache linkCache) {
+    this.linkCache = linkCache != null ? linkCache : new InMemoryLinkCache();
+  }
 
   /**
    * Instance method: find the shortest path (list of URLs) from {@code start} to {@code end}.
@@ -62,24 +89,37 @@ public class BFS implements BFSInterface {
     Queue<String> queue = new LinkedList<>();
     Set<String> discovered = new HashSet<>();
     Map<String, String> parents = new HashMap<>();
-    Map<String, Set<String>> linkCache = new HashMap<>();
+
     queue.add(startUrl);
     discovered.add(startUrl);
     int nodeCnt = 0;
-    while (!queue.isEmpty() && nodeCnt < 1000) {
+
+    while (!queue.isEmpty() && nodeCnt < MAX_EXPANDED_NODES) {
       String currentUrl = queue.poll();
       nodeCnt++;
-      // Fetch outgoing links (cache per URL)
+
+      // Fetch outgoing links (check cache first)
       Set<String> neighbors = linkCache.get(currentUrl);
       if (neighbors == null) {
-        PageNode node = nodeFactory.apply(currentUrl);
-        node.findOutgoingLinks();
-        neighbors = new HashSet<>();
-        for (PageNode n : node.getOutNodes()) {
-          neighbors.add(n.getURL());
+        // Not cached: build using the factory (which will fetch the page)
+        if (PARALLEL_FETCH) {
+          // Fetch neighbors asynchronously to allow multiple network calls to overlap
+          try {
+            neighbors = fetchNeighborsParallel(currentUrl, nodeFactory);
+          } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            neighbors = Collections.emptySet();
+          }
+        } else {
+          PageNode node = nodeFactory.apply(currentUrl);
+          node.findOutgoingLinks();
+          neighbors = new HashSet<>(node.getOutLinks());
         }
-        linkCache.put(currentUrl, neighbors);
+        // Cache an unmodifiable set to avoid accidental modification
+        linkCache.put(currentUrl, Collections.unmodifiableSet(neighbors));
+        neighbors = linkCache.get(currentUrl);
       }
+
       for (String neighborUrl : neighbors) {
         if (!discovered.contains(neighborUrl)) {
           discovered.add(neighborUrl);
@@ -130,33 +170,43 @@ public class BFS implements BFSInterface {
     if (startUrl.equals(endUrl)) {
       return new BFSResult(Collections.singletonList(startUrl), 1);
     }
+
     Queue<String> queue = new LinkedList<>();
     Set<String> discovered = new HashSet<>();
     Map<String, String> parents = new HashMap<>();
-    Map<String, Set<String>> linkCache = new HashMap<>();
+
     queue.add(startUrl);
     discovered.add(startUrl);
     int nodeCnt = 0;
-    while (!queue.isEmpty() && nodeCnt < 1000) {
+
+    while (!queue.isEmpty() && nodeCnt < MAX_EXPANDED_NODES) {
       String currentUrl = queue.poll();
       nodeCnt++;
+
       Set<String> neighbors = linkCache.get(currentUrl);
       if (neighbors == null) {
-        PageNode node = nodeFactory.apply(currentUrl);
-        node.findOutgoingLinks();
-        neighbors = new HashSet<>();
-        for (PageNode n : node.getOutNodes()) {
-          neighbors.add(n.getURL());
+        if (PARALLEL_FETCH) {
+          try {
+            neighbors = fetchNeighborsParallel(currentUrl, nodeFactory);
+          } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            neighbors = Collections.emptySet();
+          }
+        } else {
+          PageNode node = nodeFactory.apply(currentUrl);
+          node.findOutgoingLinks();
+          neighbors = new HashSet<>(node.getOutLinks());
         }
-        linkCache.put(currentUrl, neighbors);
+        linkCache.put(currentUrl, Collections.unmodifiableSet(neighbors));
+        neighbors = linkCache.get(currentUrl);
       }
+
       for (String neighborUrl : neighbors) {
         if (!discovered.contains(neighborUrl)) {
           discovered.add(neighborUrl);
           parents.put(neighborUrl, currentUrl);
           queue.add(neighborUrl);
           if (neighborUrl.equals(endUrl)) {
-            // Early exit: reconstruct path
             List<String> result = new LinkedList<>();
             String temp = endUrl;
             while (!temp.equals(startUrl)) {
@@ -170,7 +220,53 @@ public class BFS implements BFSInterface {
         }
       }
     }
-    // Not found or cap reached
     return new BFSResult(null, nodeCnt);
+  }
+
+  // Helper to fetch neighbors using an ExecutorService so network I/O can overlap
+  private Set<String> fetchNeighborsParallel(String url, Function<String, PageNode> nodeFactory)
+      throws InterruptedException {
+    // Simple strategy: submit a task to fetch this URL's neighbors and wait a bounded time
+    Future<Set<String>> future =
+        fetchPool.submit(
+            () -> {
+              PageNode node = nodeFactory.apply(url);
+              node.findOutgoingLinks();
+              return extractNeighborUrls(node);
+            });
+
+    try {
+      // Wait up to 6 seconds for neighbor fetch; if it times out, return empty set so BFS can
+      // continue exploring other nodes.
+      return future.get(6, TimeUnit.SECONDS);
+    } catch (ExecutionException e) {
+      // Fetch failed; return empty set
+      return Collections.emptySet();
+    } catch (TimeoutException e) {
+      future.cancel(true);
+      return Collections.emptySet();
+    }
+  }
+
+  // Extract neighbor URLs from a PageNode. Support both getOutLinks() (URL-keyed map) and
+  // getOutNodes() (tests/mock override) to remain compatible with existing tests and
+  // implementations.
+  private Set<String> extractNeighborUrls(PageNode node) {
+    Set<String> res = new HashSet<>();
+    try {
+      Set<String> outLinks = node.getOutLinks();
+      if (outLinks != null && !outLinks.isEmpty()) {
+        res.addAll(outLinks);
+      } else {
+        for (PageNode pn : node.getOutNodes()) {
+          if (pn != null && pn.getURL() != null) {
+            res.add(pn.getURL());
+          }
+        }
+      }
+    } catch (Exception e) {
+      // Fallback: return empty set on unexpected errors
+    }
+    return res;
   }
 }

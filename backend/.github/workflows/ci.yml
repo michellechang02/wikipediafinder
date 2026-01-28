@@ -9,6 +9,11 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    services:
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
 
     steps:
       - name: Checkout
@@ -34,7 +39,11 @@ jobs:
         run: chmod +x ./gradlew
 
       - name: Run Spotless check
+        env:
+          REDIS_URL: redis://localhost:6379
         run: ./gradlew :spotlessCheck --no-daemon
 
       - name: Build (with tests)
+        env:
+          REDIS_URL: redis://localhost:6379
         run: ./gradlew build --no-daemon

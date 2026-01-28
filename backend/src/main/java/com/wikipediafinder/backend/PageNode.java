@@ -44,9 +44,14 @@ public class PageNode implements PageNodeInterface {
 
     this.url = url;
 
-    // Create the Document object using Jsoup
+    // Create the Document object using Jsoup with sensible timeouts and a user agent
     try {
-      page = Jsoup.connect(url).get();
+      page =
+          Jsoup.connect(url)
+              .userAgent("Mozilla/5.0 (compatible; WikipediaFinder/1.0; +https://example.com)")
+              .timeout(5000) // 5s timeout to avoid hanging on slow requests
+              .maxBodySize(0)
+              .get();
       System.out.println("Successfully connected to: " + url);
     } catch (IOException e) {
       System.err.println("Failed to connect to: " + url);
@@ -60,6 +65,11 @@ public class PageNode implements PageNodeInterface {
   /**
    * Loads and caches up to 10 outgoing links extracted from the page's bodyContent element. Links
    * that are non-content (files, categories, help pages, etc.) are skipped.
+   *
+   * <p>Important performance change: this method no longer constructs new PageNode objects for each
+   * discovered link. Instead we record the outgoing URL keys only. This prevents eager network
+   * fetches for every neighbor and defers fetching until neighbors are actually expanded by the BFS
+   * algorithm.
    */
   public void findOutgoingLinks() {
     if (page == null) {
@@ -87,13 +97,13 @@ public class PageNode implements PageNodeInterface {
       String absoluteUrl = link.absUrl("href"); // Resolve to absolute URL
       if (absoluteUrl.startsWith(WIKI_LINK_PREFIX) && !outLinks.containsKey(absoluteUrl)) {
         try {
-          PageNode outPage = new PageNode(absoluteUrl);
-          if (outPage.isValidPage()) {
-            outLinks.put(absoluteUrl, outPage);
-            count++;
-          }
+          // Performance: don't eagerly create PageNode instances for each discovered link.
+          // Instead store the URL key; the BFS will instantiate PageNode objects only when
+          // expanding a node (i.e. when we actually need to fetch its outgoing links).
+          outLinks.put(absoluteUrl, null);
+          count++;
         } catch (IllegalArgumentException ignored) {
-          // Skip invalid links
+          // Skip invalid links (defensive - shouldn't happen since we only store URLs)
         }
       }
     }
