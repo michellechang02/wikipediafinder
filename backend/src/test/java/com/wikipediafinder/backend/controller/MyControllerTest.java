@@ -28,7 +28,10 @@ public class MyControllerTest {
 
   @Test
   public void healthEndpointReturnsOk() throws Exception {
-    mockMvc.perform(get("/api/health")).andExpect(status().isOk()).andExpect(content().string("[Health check] - This app is running!"));
+    mockMvc
+        .perform(get("/api/health"))
+        .andExpect(status().isOk())
+        .andExpect(content().string("[Health check] - This app is running!"));
   }
 
   @Test
