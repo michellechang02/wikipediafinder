@@ -1,0 +1,7 @@
+# Node modules (for commit linting)
+node_modules/
+package-lock.json
+
+# IDE
+.idea/
+.vscode/
