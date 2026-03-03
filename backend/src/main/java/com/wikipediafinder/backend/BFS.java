@@ -3,6 +3,7 @@ package com.wikipediafinder.backend;
 import com.wikipediafinder.backend.interfaces.BFSInterface;
 import java.util.*;
 import java.util.function.Function;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 /**
@@ -32,6 +33,7 @@ public class BFS implements BFSInterface {
    * @throws IllegalArgumentException if {@code start} or {@code end} is null
    */
   @Override
+  @Cacheable(value = "pathCache", key = "#start.URL + '->' + #end.URL")
   public List<String> getPath(PageNode start, PageNode end) {
     return getPath(start, end, DEFAULT_FACTORY);
   }
@@ -115,6 +117,7 @@ public class BFS implements BFSInterface {
    * @throws IllegalArgumentException if {@code start} or {@code end} is null
    */
   @Override
+  @Cacheable(value = "pathStatsCache", key = "#start.URL + '->' + #end.URL")
   public BFSResult getPathWithStats(PageNode start, PageNode end) {
     return getPathWithStats(start, end, DEFAULT_FACTORY);
   }
