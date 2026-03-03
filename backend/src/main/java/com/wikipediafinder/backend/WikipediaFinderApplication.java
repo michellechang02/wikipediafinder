@@ -3,6 +3,7 @@ package com.wikipediafinder.backend;
 import com.wikipediafinder.backend.interfaces.WikipediaFinderApplicationInterface;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.context.annotation.Bean;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
@@ -10,6 +11,7 @@ import org.springframework.web.filter.CorsFilter;
 
 /** Main Spring Boot application class for Wikipedia path finder. */
 @SpringBootApplication
+@EnableCaching
 public class WikipediaFinderApplication implements WikipediaFinderApplicationInterface {
 
   /**
