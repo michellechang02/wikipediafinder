@@ -3,32 +3,30 @@ package com.wikipediafinder.backend;
 import com.wikipediafinder.backend.interfaces.PageNodeInterface;
 import java.io.IOException;
 import java.util.*;
-import org.jsoup.Jsoup;
-import org.jsoup.nodes.Document;
-import org.jsoup.nodes.Element;
-import org.jsoup.select.Elements;
 
 /**
  * Represents a Wikipedia page and provides access to its outgoing (hyperlink) neighbors.
  *
- * <p>The class lazily loads the page content using Jsoup at construction time and exposes helpers
- * to extract and cache outgoing links. For production usage this class is relatively heavy-weight
- * (creates a network request during construction); in tests, a lightweight mock subclass is used
- * instead.
+ * <p>The class uses the Wikipedia API to efficiently fetch outgoing links without downloading the
+ * entire HTML content. This is significantly faster than the previous Jsoup-based approach. For
+ * production usage this class makes API requests during findOutgoingLinks(); in tests, a
+ * lightweight mock subclass is used instead.
  */
 public class PageNode implements PageNodeInterface {
   /*
    * Fields
    */
   private String url;
-  private Document page;
+  private String pageTitle;
+  private boolean validPage;
   private Map<String, PageNode> outLinks;
   private String WIKI_LINK_PREFIX = "https://en.wikipedia.org";
 
   /**
    * Construct a PageNode for the given URL. The constructor performs validation to ensure the URL
-   * looks like a Wikipedia link and attempts to fetch the page using Jsoup. If the fetch fails the
-   * node is still created but marked as invalid via {@link #isValidPage()}.
+   * looks like a Wikipedia link. Unlike the previous implementation, this does NOT fetch the page
+   * immediately - the page is assumed to be valid until findOutgoingLinks() is called, at which
+   * point validity is determined based on whether the API call succeeds.
    *
    * @param url fully-qualified Wikipedia URL (must start with the official wiki prefix)
    * @throws IllegalArgumentException if the URL is null or does not start with the wiki prefix
@@ -43,74 +41,44 @@ public class PageNode implements PageNodeInterface {
     }
 
     this.url = url;
+    this.pageTitle = WikipediaApiClient.urlToTitle(url);
 
-    // Create the Document object using Jsoup
-    try {
-      page = Jsoup.connect(url).get();
-      System.out.println("Successfully connected to: " + url);
-    } catch (IOException e) {
-      System.err.println("Failed to connect to: " + url);
-      e.printStackTrace();
-      page = null;
-    }
+    // Assume valid until proven otherwise during findOutgoingLinks()
+    this.validPage = true;
 
     outLinks = new HashMap<>();
   }
 
   /**
-   * Loads and caches up to 10 outgoing links extracted from the page's bodyContent element. Links
-   * that are non-content (files, categories, help pages, etc.) are skipped.
+   * Loads and caches up to 10 outgoing links using the Wikipedia API. This is significantly faster
+   * than parsing HTML. Links are fetched using the Wikipedia API and converted to PageNode objects
+   * (without making additional network requests per link).
    */
   public void findOutgoingLinks() {
-    if (page == null) {
-      return; // No links to process if the page is invalid
+    if (pageTitle == null) {
+      validPage = false;
+      return; // No links to process if the page title is invalid
     }
 
-    Element content = page.getElementById("bodyContent");
-    if (content == null) {
-      return; // Skip if the page structure is unexpected
-    }
+    try {
+      Set<String> linkUrls = WikipediaApiClient.getOutgoingLinks(pageTitle, 10);
 
-    Elements links = content.getElementsByTag("a");
-    int count = 0;
-
-    for (Element link : links) {
-      if (count >= 10) {
-        break; // Limit to 10 outgoing links
-      }
-
-      String href = link.attr("href");
-      if (isSkippableLink(href)) {
-        continue; // Skip non-content links
-      }
-
-      String absoluteUrl = link.absUrl("href"); // Resolve to absolute URL
-      if (absoluteUrl.startsWith(WIKI_LINK_PREFIX) && !outLinks.containsKey(absoluteUrl)) {
-        try {
-          PageNode outPage = new PageNode(absoluteUrl);
-          if (outPage.isValidPage()) {
-            outLinks.put(absoluteUrl, outPage);
-            count++;
+      for (String linkUrl : linkUrls) {
+        if (!outLinks.containsKey(linkUrl)) {
+          // Create a lightweight PageNode without triggering additional API calls
+          try {
+            PageNode outPage = new PageNode(linkUrl);
+            outLinks.put(linkUrl, outPage);
+          } catch (IllegalArgumentException ignored) {
+            // Skip invalid links
           }
-        } catch (IllegalArgumentException ignored) {
-          // Skip invalid links
         }
       }
+    } catch (IOException e) {
+      System.err.println("Failed to fetch links for: " + url);
+      e.printStackTrace();
+      validPage = false;
     }
-  }
-
-  /*
-   * Checks if a link should be skipped
-   */
-  private boolean isSkippableLink(String link) {
-    return link.isEmpty()
-        || link.charAt(0) == '#'
-        || link.contains("index.php")
-        || link.contains("File:")
-        || link.contains("Category:")
-        || link.contains("Help:")
-        || link.contains("Special:")
-        || link.contains("Wikipedia:");
   }
 
   /**
@@ -127,7 +95,7 @@ public class PageNode implements PageNodeInterface {
 
   /** Returns true if the underlying page was successfully loaded. */
   public boolean isValidPage() {
-    return page != null;
+    return validPage;
   }
 
   /** Returns the full URL of this page. */
