@@ -37,4 +37,7 @@ If you found this tool helpful, please consider starring the repository on GitHu
 ### Local Development
 To run locally, clone the repository and follow the instructions in the frontend and backend README files.
 
+### Contributing
+Interested in contributing? Please read our [Contributing Guide](CONTRIBUTING.md) to learn about our commit message conventions and development process.
+
 ---
