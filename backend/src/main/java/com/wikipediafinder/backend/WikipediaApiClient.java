@@ -98,16 +98,8 @@ public class WikipediaApiClient {
    * @return the full Wikipedia URL
    */
   private static String titleToUrl(String title) {
-    // Replace spaces with underscores and encode special characters
+    // Replace spaces with underscores for Wikipedia URL format
     String formattedTitle = title.replace(" ", "_");
-    try {
-      formattedTitle = URLEncoder.encode(formattedTitle, StandardCharsets.UTF_8);
-      // Decode certain characters that Wikipedia URLs use literally
-      formattedTitle = formattedTitle.replace("%28", "(").replace("%29", ")");
-    } catch (Exception e) {
-      // Fallback: just replace spaces
-      formattedTitle = title.replace(" ", "_");
-    }
     return "https://en.wikipedia.org/wiki/" + formattedTitle;
   }
 
@@ -171,7 +163,10 @@ public class WikipediaApiClient {
       }
       return true;
 
-    } catch (Exception e) {
+    } catch (IOException e) {
+      return false;
+    } catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
       return false;
     }
   }

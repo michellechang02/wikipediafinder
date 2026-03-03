@@ -25,7 +25,8 @@ public class PageNode implements PageNodeInterface {
   /**
    * Construct a PageNode for the given URL. The constructor performs validation to ensure the URL
    * looks like a Wikipedia link. Unlike the previous implementation, this does NOT fetch the page
-   * immediately - validation is deferred until actually needed.
+   * immediately - the page is assumed to be valid until findOutgoingLinks() is called, at which
+   * point validity is determined based on whether the API call succeeds.
    *
    * @param url fully-qualified Wikipedia URL (must start with the official wiki prefix)
    * @throws IllegalArgumentException if the URL is null or does not start with the wiki prefix
@@ -42,7 +43,7 @@ public class PageNode implements PageNodeInterface {
     this.url = url;
     this.pageTitle = WikipediaApiClient.urlToTitle(url);
 
-    // Assume valid until proven otherwise (lazy validation)
+    // Assume valid until proven otherwise during findOutgoingLinks()
     this.validPage = true;
 
     outLinks = new HashMap<>();
