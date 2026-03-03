@@ -4,34 +4,34 @@ interface ResultsListProps {
   
   export const ResultsList = ({ results }: ResultsListProps) => {
     return (
-      <div className="space-y-4">
-        <div className="mb-6">
-          <h2 className="text-2xl font-semibold bg-gradient-to-r from-pink-600 to-purple-800 text-transparent bg-clip-text mb-2 font-sans">Path Results</h2>
-          <p className="text-sm text-gray-600 font-normal font-sans">
+      <div className="space-y-3 sm:space-y-4">
+        <div className="mb-4 sm:mb-6">
+          <h2 className="text-xl sm:text-2xl font-semibold bg-gradient-to-r from-pink-600 to-purple-800 text-transparent bg-clip-text mb-2 font-sans">Path Results</h2>
+          <p className="text-xs sm:text-sm text-gray-600 font-normal font-sans">
             Click on any article to open it in Wikipedia. Hover over links to preview the destination.
           </p>
         </div>
         {results.map((res, index) => (
           <div 
             key={index} 
-            className="bg-white backdrop-blur-sm border border-blue-100 rounded-xl p-4 hover:border-blue-300 transition-all duration-200 transform hover:scale-[1.02] hover:shadow-lg"
+            className="bg-white backdrop-blur-sm border border-blue-100 rounded-xl p-3 sm:p-4 hover:border-blue-300 transition-all duration-200 transform hover:scale-[1.02] hover:shadow-lg"
             title={`Click to visit: ${res.split('/wiki/').pop()?.replace(/_/g, ' ')}`}
           >
-            <div className="flex items-center space-x-4">
-              <span className="flex-shrink-0 h-8 w-8 rounded-lg bg-gradient-to-r from-pink-600 to-purple-800 flex items-center justify-center text-white font-medium shadow-md">
+            <div className="flex items-center space-x-3 sm:space-x-4">
+              <span className="flex-shrink-0 h-7 w-7 sm:h-8 sm:w-8 rounded-lg bg-gradient-to-r from-pink-600 to-purple-800 flex items-center justify-center text-white text-sm sm:text-base font-medium shadow-md">
                 {index + 1}
               </span>
               <a
                 href={res}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="group flex items-center space-x-2 text-pink-600 hover:text-purple-800 truncate transition-colors"
+                className="group flex items-center space-x-2 text-pink-600 hover:text-purple-800 min-w-0 flex-1 transition-colors"
               >
-                <span className="group-hover:underline font-normal">
+                <span className="group-hover:underline font-normal text-sm sm:text-base break-words">
                   {res.split('/wiki/').pop()?.replace(/_/g, ' ')}
                 </span>
                 <svg 
-                  className="w-4 h-4 opacity-0 group-hover:opacity-100 transition-all duration-200" 
+                  className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0 opacity-0 group-hover:opacity-100 transition-all duration-200" 
                   fill="none" 
                   stroke="currentColor" 
                   viewBox="0 0 24 24"

@@ -70,44 +70,44 @@ function App() {
   };
 
   return (
-    <div className="min-h-screen bg-purple-50 py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-purple-50 py-6 sm:py-12 px-3 sm:px-4 md:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto">
         {/* Navbar */}
-        <div className="flex justify-between items-center px-8 py-6 mb-8 bg-white backdrop-blur-sm rounded-2xl border border-purple-100 shadow-lg">
-          <div className="text-2xl font-bold bg-gradient-to-r from-pink-600 to-purple-800 text-transparent bg-clip-text font-sans">
+        <div className="flex flex-col sm:flex-row justify-between items-center gap-2 sm:gap-4 px-4 sm:px-8 py-4 sm:py-6 mb-6 sm:mb-8 bg-white backdrop-blur-sm rounded-2xl border border-purple-100 shadow-lg">
+          <div className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-pink-600 to-purple-800 text-transparent bg-clip-text font-sans">
             mɪˈʃɛl
           </div>
           <div className="flex items-center gap-4">
-            <div className="text-sm font-medium text-gray-600">{copyrightText}</div>
+            <div className="text-xs sm:text-sm font-medium text-gray-600 text-center">{copyrightText}</div>
           </div>
         </div>
 
         <div className="flex flex-col lg:flex-row gap-8">
           {/* Input Section */}
           <div className="lg:w-1/2">
-            <div className="bg-white backdrop-blur-sm shadow-xl rounded-3xl p-8 border border-purple-100 hover:shadow-2xl hover:scale-[1.02] transition-all duration-300">
-              <div className="text-center mb-8">
+            <div className="bg-white backdrop-blur-sm shadow-xl rounded-3xl p-4 sm:p-8 border border-purple-100 hover:shadow-2xl hover:scale-[1.02] transition-all duration-300">
+              <div className="text-center mb-6 sm:mb-8">
 
-                <h1 className="text-4xl font-bold bg-gradient-to-r from-pink-600 to-purple-800 text-transparent bg-clip-text mb-4 font-sans">
+                <h1 className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-pink-600 to-purple-800 text-transparent bg-clip-text mb-4 font-sans">
                   Wikipedia Path Finder
                 </h1>
-                <div className="mt-5">
-                  <p className="text-md text-gray-600 font-normal px-3 py-1.5 border-2 border-purple-100 rounded-lg inline-block shadow-sm hover:shadow-md transition-all duration-200">University of Pennsylvania • Michelle Chang (장민지)</p>
+                <div className="mt-4 sm:mt-5">
+                  <p className="text-sm sm:text-md text-gray-600 font-normal px-2 sm:px-3 py-1.5 border-2 border-purple-100 rounded-lg inline-block shadow-sm hover:shadow-md transition-all duration-200">University of Pennsylvania • Michelle Chang (장민지)</p>
                 </div>
                 <div className="mt-4">
-                  <p className="text-lg text-gray-700 font-normal font-sans">
+                  <p className="text-base sm:text-lg text-gray-700 font-normal font-sans">
                     Discover the shortest path between Wikipedia articles
                   </p>
                 </div>
                 
-                <div className="mt-8 mb-8">
+                <div className="mt-6 sm:mt-8 mb-6 sm:mb-8">
                   <div className="h-px bg-gradient-to-r from-transparent via-purple-200 to-transparent"></div>
                 </div>
               </div>
 
-              <div className="space-y-6">
+              <div className="space-y-4 sm:space-y-6">
                 <div className="group relative">
-                  <label htmlFor="startingLink" className="block text-sm font-normal text-gray-700 mb-3 group-hover:text-pink-600 transition-colors duration-200">
+                  <label htmlFor="startingLink" className="block text-xs sm:text-sm font-normal text-gray-700 mb-2 sm:mb-3 group-hover:text-pink-600 transition-colors duration-200">
                     Starting Article Topic (Case Sensitive, include Spaces)
                   </label>
                   <input
@@ -116,7 +116,7 @@ function App() {
                     value={startingLink}
                     onChange={(e) => setStartingLink(e.target.value)}
                     placeholder="e.g. South Korea"
-                    className="mt-1 block w-full px-5 py-4 border-2 border-purple-100 rounded-xl focus:ring-2 focus:ring-purple-800 focus:border-purple-800 bg-white/70 shadow-sm placeholder:text-gray-400 transition-all duration-200 group-hover:bg-white/90"
+                    className="mt-1 block w-full px-4 sm:px-5 py-3 sm:py-4 text-sm sm:text-base border-2 border-purple-100 rounded-xl focus:ring-2 focus:ring-purple-800 focus:border-purple-800 bg-white/70 shadow-sm placeholder:text-gray-400 transition-all duration-200 group-hover:bg-white/90"
                   />
                   <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-200 mt-8">
                     <svg className="h-5 w-5 text-pink-600" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
@@ -126,7 +126,7 @@ function App() {
                 </div>
                 
                 <div className="group relative">
-                  <label htmlFor="endingLink" className="block text-sm font-normal text-gray-700 mb-3 group-hover:text-pink-600 transition-colors duration-200">
+                  <label htmlFor="endingLink" className="block text-xs sm:text-sm font-normal text-gray-700 mb-2 sm:mb-3 group-hover:text-pink-600 transition-colors duration-200">
                     Target Article Topic (Case Sensitive, include Spaces)
                   </label>
                   <input
@@ -135,7 +135,7 @@ function App() {
                     value={endingLink}
                     onChange={(e) => setEndingLink(e.target.value)}
                     placeholder="e.g. Hangul"
-                    className="mt-1 block w-full px-5 py-4 border-2 border-purple-100 rounded-xl focus:ring-2 focus:ring-purple-800 focus:border-purple-800 bg-white/70 shadow-sm placeholder:text-gray-400 transition-all duration-200 group-hover:bg-white/90"
+                    className="mt-1 block w-full px-4 sm:px-5 py-3 sm:py-4 text-sm sm:text-base border-2 border-purple-100 rounded-xl focus:ring-2 focus:ring-purple-800 focus:border-purple-800 bg-white/70 shadow-sm placeholder:text-gray-400 transition-all duration-200 group-hover:bg-white/90"
                   />
                   <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-200 mt-8">
                     <svg className="h-5 w-5 text-pink-600" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
@@ -144,25 +144,25 @@ function App() {
                   </div>
                 </div>
 
-                <div className="mt-6 p-6 bg-white rounded-xl border border-purple-100 shadow-md hover:shadow-lg transition-all duration-300">
-                  <h3 className="text-lg font-semibold bg-gradient-to-r from-pink-600 to-purple-800 text-transparent bg-clip-text mb-3">How it Works</h3>
-                  <p className="text-sm leading-relaxed text-gray-700 font-normal mb-4 font-sans">
+                <div className="mt-4 sm:mt-6 p-4 sm:p-6 bg-white rounded-xl border border-purple-100 shadow-md hover:shadow-lg transition-all duration-300">
+                  <h3 className="text-base sm:text-lg font-semibold bg-gradient-to-r from-pink-600 to-purple-800 text-transparent bg-clip-text mb-2 sm:mb-3">How it Works</h3>
+                  <p className="text-xs sm:text-sm leading-relaxed text-gray-700 font-normal mb-3 sm:mb-4 font-sans">
                     This tool uses Breadth-First Search (BFS) to find the shortest path between Wikipedia articles. 
                     BFS explores the web of connections level by level, ensuring the discovered path has the minimum 
                     number of clicks needed to reach the target article.
                   </p>
-                  <div className="mt-3 flex items-center space-x-2 text-sm font-normal text-gray-600">
-                    <svg className="w-5 h-5 text-pink-600" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                  <div className="mt-3 flex items-center space-x-2 text-xs sm:text-sm font-normal text-gray-600">
+                    <svg className="w-4 h-4 sm:w-5 sm:h-5 text-pink-600 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
                       <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2h-1V9z" clipRule="evenodd"></path>
                     </svg>
-                    <span className="text-sm font-normal text-gray-600">Search is limited to 1000 nodes to ensure quick results</span>
+                    <span className="text-xs sm:text-sm font-normal text-gray-600">Search is limited to 1000 nodes to ensure quick results</span>
                   </div>
                 </div>
 
                 <button 
                   onClick={handleQuery} 
                   disabled={!startingLink || !endingLink || isLoading}
-                  className="w-full mt-6 py-3.5 px-4 bg-gradient-to-r from-pink-600 to-purple-800 text-white font-medium rounded-xl hover:from-pink-700 hover:to-purple-900 transform hover:scale-[1.02] transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 shadow-lg disabled:opacity-70 disabled:cursor-not-allowed disabled:transform-none"
+                  className="w-full mt-4 sm:mt-6 py-3 sm:py-3.5 px-4 text-sm sm:text-base bg-gradient-to-r from-pink-600 to-purple-800 text-white font-medium rounded-xl hover:from-pink-700 hover:to-purple-900 transform hover:scale-[1.02] transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 shadow-lg disabled:opacity-70 disabled:cursor-not-allowed disabled:transform-none"
                 >
                   {isLoading ? (
                     <span className="flex items-center justify-center">
@@ -183,10 +183,10 @@ function App() {
           {/* Results Section */}
           <div className="lg:w-1/2">
             {(isLoading || results.length > 0) && (
-              <div className="bg-gradient-to-br from-white/95 via-white/90 to-purple-50/90 backdrop-blur-sm shadow-xl rounded-3xl p-8 border border-purple-100 hover:shadow-2xl hover:scale-[1.02] transition-all duration-300">
+              <div className="bg-gradient-to-br from-white/95 via-white/90 to-purple-50/90 backdrop-blur-sm shadow-xl rounded-3xl p-4 sm:p-8 border border-purple-100 hover:shadow-2xl hover:scale-[1.02] transition-all duration-300">
                 {isLoading ? (
                   <div className="text-center">
-                    <p className="text-xl font-semibold bg-gradient-to-r from-pink-600 to-pink-800 text-transparent bg-clip-text">
+                    <p className="text-lg sm:text-xl font-semibold bg-gradient-to-r from-pink-600 to-pink-800 text-transparent bg-clip-text">
                       Exploring Wikipedia using BFS...
                     </p>
                     <div className="mt-6 flex justify-center">
@@ -196,7 +196,7 @@ function App() {
                 ) : (
                   <>
                     {nodesExplored > 0 && (
-                      <div className="mb-4 text-sm font-medium bg-gradient-to-r from-pink-600 to-purple-800 text-transparent bg-clip-text">
+                      <div className="mb-4 text-xs sm:text-sm font-medium bg-gradient-to-r from-pink-600 to-purple-800 text-transparent bg-clip-text">
                         BFS explored {nodesExplored} nodes to find this path
                       </div>
                     )}
