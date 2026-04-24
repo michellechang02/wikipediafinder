@@ -41,8 +41,7 @@ public class MyControllerTest {
     when(bfs.getPathWithStats(any(PageNode.class), any(PageNode.class)))
         .thenReturn(
             new BFSResult(
-                Arrays.asList(
-                    "https://en.wikipedia.org/wiki/A", "https://en.wikipedia.org/wiki/B"),
+                Arrays.asList("https://en.wikipedia.org/wiki/A", "https://en.wikipedia.org/wiki/B"),
                 2));
 
     mockMvc
