@@ -61,7 +61,7 @@ public class PageNode implements PageNodeInterface {
     }
 
     try {
-      Set<String> linkUrls = WikipediaApiClient.getOutgoingLinks(pageTitle, 10);
+      Set<String> linkUrls = WikipediaApiClient.getOutgoingLinks(pageTitle, 500);
 
       for (String linkUrl : linkUrls) {
         if (!outLinks.containsKey(linkUrl)) {
