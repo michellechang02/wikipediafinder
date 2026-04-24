@@ -36,8 +36,7 @@ public class MyController {
   public ResponseEntity<Object> getResults(
       @RequestParam String startinglink, @RequestParam String endinglink) {
     try {
-      BFSResult result =
-          bfs.getPathWithStats(new PageNode(startinglink), new PageNode(endinglink));
+      BFSResult result = bfs.getPathWithStats(new PageNode(startinglink), new PageNode(endinglink));
 
       if (result.getPath() == null) {
         return new ResponseEntity<>(
