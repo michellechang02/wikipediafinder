@@ -1,8 +1,8 @@
 package com.wikipediafinder.backend.controller;
 
 import com.wikipediafinder.backend.BFS;
+import com.wikipediafinder.backend.BFSResult;
 import com.wikipediafinder.backend.PageNode;
-import java.util.List;
 import java.util.Map;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -31,19 +31,20 @@ public class MyController {
     return ResponseEntity.ok("[Health check] - This app is running!");
   }
 
-  @CrossOrigin(origins = "http://localhost:5173")
+  @CrossOrigin(origins = {"http://localhost:5173", "https://wikipedia-path-finder.vercel.app"})
   @GetMapping("/getResults")
   public ResponseEntity<Object> getResults(
       @RequestParam String startinglink, @RequestParam String endinglink) {
     try {
-      List<String> results = bfs.getPath(new PageNode(startinglink), new PageNode(endinglink));
+      BFSResult result =
+          bfs.getPathWithStats(new PageNode(startinglink), new PageNode(endinglink));
 
-      if (results == null) {
+      if (result.getPath() == null) {
         return new ResponseEntity<>(
             Map.of("message", "No path found or query took too long"), HttpStatus.OK);
       }
 
-      return new ResponseEntity<>(results, HttpStatus.OK);
+      return new ResponseEntity<>(result, HttpStatus.OK);
     } catch (IllegalArgumentException e) {
       return new ResponseEntity<>(Map.of("error", e.getMessage()), HttpStatus.BAD_REQUEST);
     }

@@ -27,6 +27,7 @@ function App() {
             startinglink: `https://en.wikipedia.org/wiki/${startingLink.replace(/\s+/g, "_").replace(/\b\w/g, char => char.toUpperCase())}`,
             endinglink: `https://en.wikipedia.org/wiki/${endingLink.replace(/\s+/g, "_").replace(/\b\w/g, char => char.toUpperCase())}`,
           },
+          timeout: 60000,
         });
         if (response.data.nodesExplored) {
           setNodesExplored(response.data.nodesExplored);

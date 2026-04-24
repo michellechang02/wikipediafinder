@@ -4,9 +4,11 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.wikipediafinder.backend.BFS;
+import com.wikipediafinder.backend.BFSResult;
 import com.wikipediafinder.backend.PageNode;
 import java.util.Arrays;
 import org.junit.jupiter.api.Test;
@@ -36,9 +38,12 @@ public class MyControllerTest {
 
   @Test
   public void getResultsReturnsPathWhenFound() throws Exception {
-    when(bfs.getPath(any(PageNode.class), any(PageNode.class)))
+    when(bfs.getPathWithStats(any(PageNode.class), any(PageNode.class)))
         .thenReturn(
-            Arrays.asList("https://en.wikipedia.org/wiki/A", "https://en.wikipedia.org/wiki/B"));
+            new BFSResult(
+                Arrays.asList(
+                    "https://en.wikipedia.org/wiki/A", "https://en.wikipedia.org/wiki/B"),
+                2));
 
     mockMvc
         .perform(
@@ -46,14 +51,15 @@ public class MyControllerTest {
                 .param("startinglink", "https://en.wikipedia.org/wiki/A")
                 .param("endinglink", "https://en.wikipedia.org/wiki/B"))
         .andExpect(status().isOk())
-        .andExpect(
-            content()
-                .json("[\"https://en.wikipedia.org/wiki/A\",\"https://en.wikipedia.org/wiki/B\"]"));
+        .andExpect(jsonPath("$.path[0]").value("https://en.wikipedia.org/wiki/A"))
+        .andExpect(jsonPath("$.path[1]").value("https://en.wikipedia.org/wiki/B"))
+        .andExpect(jsonPath("$.nodesExplored").value(2));
   }
 
   @Test
   public void getResultsReturnsMessageWhenNoPath() throws Exception {
-    when(bfs.getPath(any(PageNode.class), any(PageNode.class))).thenReturn(null);
+    when(bfs.getPathWithStats(any(PageNode.class), any(PageNode.class)))
+        .thenReturn(new BFSResult(null, 1000));
 
     mockMvc
         .perform(
@@ -66,7 +72,7 @@ public class MyControllerTest {
 
   @Test
   public void getResultsReturnsBadRequestWhenBfsThrows() throws Exception {
-    when(bfs.getPath(any(PageNode.class), any(PageNode.class)))
+    when(bfs.getPathWithStats(any(PageNode.class), any(PageNode.class)))
         .thenThrow(new IllegalArgumentException("invalid input"));
 
     mockMvc
