@@ -2,6 +2,7 @@ package com.wikipediafinder.backend;
 
 import com.wikipediafinder.backend.interfaces.BFSInterface;
 import java.util.*;
+import java.util.function.Consumer;
 import java.util.function.Function;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
@@ -33,7 +34,7 @@ public class BFS implements BFSInterface {
    * @throws IllegalArgumentException if {@code start} or {@code end} is null
    */
   @Override
-  @Cacheable(value = "pathCache", key = "#start.URL + '->' + #end.URL")
+  @Cacheable(value = "pathCache", key = "#start.getURL() + '->' + #end.getURL()")
   public List<String> getPath(PageNode start, PageNode end) {
     return getPath(start, end, DEFAULT_FACTORY);
   }
@@ -117,14 +118,23 @@ public class BFS implements BFSInterface {
    * @throws IllegalArgumentException if {@code start} or {@code end} is null
    */
   @Override
-  @Cacheable(value = "pathStatsCache", key = "#start.URL + '->' + #end.URL")
+  @Cacheable(value = "pathStatsCache", key = "#start.getURL() + '->' + #end.getURL()")
   public BFSResult getPathWithStats(PageNode start, PageNode end) {
-    return getPathWithStats(start, end, DEFAULT_FACTORY);
+    return getPathWithStats(start, end, DEFAULT_FACTORY, null);
   }
 
   @Override
   public BFSResult getPathWithStats(
       PageNode start, PageNode end, Function<String, PageNode> nodeFactory) {
+    return getPathWithStats(start, end, nodeFactory, null);
+  }
+
+  @Override
+  public BFSResult getPathWithStats(
+      PageNode start,
+      PageNode end,
+      Function<String, PageNode> nodeFactory,
+      Consumer<Integer> progressCallback) {
     if (start == null || end == null) {
       throw new IllegalArgumentException("Start and end nodes cannot be null.");
     }
@@ -143,6 +153,9 @@ public class BFS implements BFSInterface {
     while (!queue.isEmpty() && nodeCnt < 1000) {
       String currentUrl = queue.poll();
       nodeCnt++;
+      if (progressCallback != null) {
+        progressCallback.accept(nodeCnt);
+      }
       Set<String> neighbors = linkCache.get(currentUrl);
       if (neighbors == null) {
         PageNode node = nodeFactory.apply(currentUrl);
