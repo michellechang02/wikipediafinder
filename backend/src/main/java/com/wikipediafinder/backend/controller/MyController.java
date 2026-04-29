@@ -191,19 +191,20 @@ public class MyController {
     if (trimmed.isEmpty()) {
       return trimmed;
     }
-    if (trimmed.startsWith("http://")) {
-      trimmed = "https://" + trimmed.substring("http://".length());
+    String sanitized = trimmed.replace(" ", "_");
+    if (sanitized.startsWith("http://")) {
+      return "https://" + sanitized.substring("http://".length());
     }
-    if (trimmed.startsWith("https://")) {
-      return trimmed.replace(" ", "_");
+    if (sanitized.startsWith("https://")) {
+      return sanitized;
     }
-    if (trimmed.startsWith("en.wikipedia.org/wiki/")) {
-      return ("https://" + trimmed).replace(" ", "_");
+    if (sanitized.startsWith("en.wikipedia.org/wiki/")) {
+      return "https://" + sanitized;
     }
-    if (trimmed.startsWith("/wiki/")) {
-      return ("https://en.wikipedia.org" + trimmed).replace(" ", "_");
+    if (sanitized.startsWith("/wiki/")) {
+      return "https://en.wikipedia.org" + sanitized;
     }
-    return (WIKI_URL_PREFIX + trimmed.replace(" ", "_"));
+    return WIKI_URL_PREFIX + sanitized;
   }
 
   /** Thrown inside the BFS progress callback to abort BFS when the client has disconnected. */

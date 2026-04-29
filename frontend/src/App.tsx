@@ -17,19 +17,22 @@ function App() {
     if (!trimmed) {
       return "";
     }
-    if (trimmed.startsWith("http://")) {
-      return `https://${trimmed.slice("http://".length)}`.replace(/\s+/g, "_");
+    const httpPrefix = "http://";
+    const httpsPrefix = "https://";
+    const sanitized = trimmed.replace(/\s+/g, "_");
+    if (sanitized.startsWith(httpPrefix)) {
+      return `${httpsPrefix}${sanitized.slice(httpPrefix.length)}`;
     }
-    if (trimmed.startsWith("https://")) {
-      return trimmed.replace(/\s+/g, "_");
+    if (sanitized.startsWith(httpsPrefix)) {
+      return sanitized;
     }
-    if (trimmed.startsWith("en.wikipedia.org/wiki/")) {
-      return `https://${trimmed}`.replace(/\s+/g, "_");
+    if (sanitized.startsWith("en.wikipedia.org/wiki/")) {
+      return `${httpsPrefix}${sanitized}`;
     }
-    if (trimmed.startsWith("/wiki/")) {
-      return `https://en.wikipedia.org${trimmed}`.replace(/\s+/g, "_");
+    if (sanitized.startsWith("/wiki/")) {
+      return `https://en.wikipedia.org${sanitized}`;
     }
-    return `https://en.wikipedia.org/wiki/${trimmed.replace(/\s+/g, "_")}`;
+    return `https://en.wikipedia.org/wiki/${sanitized}`;
   };
 
   const fetchResults = () => {
