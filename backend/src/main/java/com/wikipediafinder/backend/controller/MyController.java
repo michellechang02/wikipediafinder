@@ -4,10 +4,13 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.wikipediafinder.backend.BFS;
 import com.wikipediafinder.backend.BFSResult;
 import com.wikipediafinder.backend.PageNode;
+import jakarta.annotation.PreDestroy;
 import java.io.IOException;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -32,6 +35,19 @@ public class MyController {
 
   public MyController(BFS bfs) {
     this.bfs = bfs;
+  }
+
+  @PreDestroy
+  public void shutdown() {
+    executor.shutdown();
+    try {
+      if (!executor.awaitTermination(5, TimeUnit.SECONDS)) {
+        executor.shutdownNow();
+      }
+    } catch (InterruptedException e) {
+      executor.shutdownNow();
+      Thread.currentThread().interrupt();
+    }
   }
 
   @GetMapping("/health")
@@ -75,6 +91,7 @@ public class MyController {
 
     executor.execute(
         () -> {
+          final AtomicBoolean clientDisconnected = new AtomicBoolean(false);
           try {
             PageNode start = new PageNode(startinglink);
             PageNode end = new PageNode(endinglink);
@@ -85,13 +102,19 @@ public class MyController {
                     end,
                     PageNode::new,
                     nodeCount -> {
+                      if (clientDisconnected.get()) {
+                        // Signal BFS to stop by throwing an unchecked exception that
+                        // propagates out of the lambda and terminates the BFS loop.
+                        throw new ClientDisconnectedException();
+                      }
                       try {
                         emitter.send(
                             SseEmitter.event()
                                 .name("progress")
                                 .data(Map.of("nodesExplored", nodeCount)));
                       } catch (IOException ignored) {
-                        // Client disconnected; BFS will continue and complete naturally.
+                        // Client disconnected; mark flag so next callback iteration stops BFS.
+                        clientDisconnected.set(true);
                       }
                     });
 
@@ -110,6 +133,9 @@ public class MyController {
                   SseEmitter.event().name("result").data(objectMapper.writeValueAsString(result)));
             }
             emitter.complete();
+          } catch (ClientDisconnectedException e) {
+            // Client disconnected mid-BFS; just complete the emitter silently.
+            emitter.complete();
           } catch (IllegalArgumentException e) {
             try {
               emitter.send(SseEmitter.event().name("error").data(Map.of("error", e.getMessage())));
@@ -123,5 +149,12 @@ public class MyController {
         });
 
     return emitter;
+  }
+
+  /** Thrown inside the BFS progress callback to abort BFS when the client has disconnected. */
+  private static final class ClientDisconnectedException extends RuntimeException {
+    ClientDisconnectedException() {
+      super(null, null, true, false); // Suppress stack-trace filling for performance.
+    }
   }
 }
