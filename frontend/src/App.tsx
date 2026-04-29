@@ -12,8 +12,25 @@ function App() {
   const currentYear = new Date().getFullYear();
   const copyrightText = `© ${currentYear} All rights reserved`;
 
-  const buildWikiUrl = (topic: string) =>
-    `https://en.wikipedia.org/wiki/${topic.replace(/\s+/g, "_")}`;
+  const buildWikiUrl = (topic: string) => {
+    const trimmed = topic.trim();
+    if (!trimmed) {
+      return "";
+    }
+    if (trimmed.startsWith("http://")) {
+      return `https://${trimmed.slice("http://".length)}`.replace(/\s+/g, "_");
+    }
+    if (trimmed.startsWith("https://")) {
+      return trimmed.replace(/\s+/g, "_");
+    }
+    if (trimmed.startsWith("en.wikipedia.org/wiki/")) {
+      return `https://${trimmed}`.replace(/\s+/g, "_");
+    }
+    if (trimmed.startsWith("/wiki/")) {
+      return `https://en.wikipedia.org${trimmed}`.replace(/\s+/g, "_");
+    }
+    return `https://en.wikipedia.org/wiki/${trimmed.replace(/\s+/g, "_")}`;
+  };
 
   const fetchResults = () => {
     const streamEndpoints = [

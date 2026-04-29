@@ -11,6 +11,8 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+import org.springframework.cache.Cache;
+import org.springframework.cache.CacheManager;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -29,12 +31,16 @@ import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 @RequestMapping("/api")
 public class MyController {
 
+  private static final String WIKI_URL_PREFIX = "https://en.wikipedia.org/wiki/";
+
   private final BFS bfs;
+  private final CacheManager cacheManager;
   private final ObjectMapper objectMapper = new ObjectMapper();
   private final ExecutorService executor = Executors.newCachedThreadPool();
 
-  public MyController(BFS bfs) {
+  public MyController(BFS bfs, CacheManager cacheManager) {
     this.bfs = bfs;
+    this.cacheManager = cacheManager;
   }
 
   @PreDestroy
@@ -60,7 +66,10 @@ public class MyController {
   public ResponseEntity<Object> getResults(
       @RequestParam String startinglink, @RequestParam String endinglink) {
     try {
-      BFSResult result = bfs.getPathWithStats(new PageNode(startinglink), new PageNode(endinglink));
+      String normalizedStart = normalizeWikipediaUrl(startinglink);
+      String normalizedEnd = normalizeWikipediaUrl(endinglink);
+      BFSResult result =
+          bfs.getPathWithStats(new PageNode(normalizedStart), new PageNode(normalizedEnd));
 
       if (result.getPath() == null) {
         return new ResponseEntity<>(
@@ -93,8 +102,25 @@ public class MyController {
         () -> {
           final AtomicBoolean clientDisconnected = new AtomicBoolean(false);
           try {
-            PageNode start = new PageNode(startinglink);
-            PageNode end = new PageNode(endinglink);
+            String normalizedStart = normalizeWikipediaUrl(startinglink);
+            String normalizedEnd = normalizeWikipediaUrl(endinglink);
+            String cacheKey = normalizedStart + "->" + normalizedEnd;
+            Cache cache = cacheManager.getCache("pathStatsCache");
+            if (cache != null) {
+              BFSResult cachedResult = cache.get(cacheKey, BFSResult.class);
+              if (cachedResult != null) {
+                emitter.send(
+                    SseEmitter.event()
+                        .name("progress")
+                        .data(Map.of("nodesExplored", cachedResult.getNodesExplored())));
+                sendResult(emitter, cachedResult);
+                emitter.complete();
+                return;
+              }
+            }
+
+            PageNode start = new PageNode(normalizedStart);
+            PageNode end = new PageNode(normalizedEnd);
 
             BFSResult result =
                 bfs.getPathWithStats(
@@ -118,20 +144,10 @@ public class MyController {
                       }
                     });
 
-            if (result.getPath() == null) {
-              emitter.send(
-                  SseEmitter.event()
-                      .name("result")
-                      .data(
-                          Map.of(
-                              "message",
-                              "No path found or query took too long",
-                              "nodesExplored",
-                              result.getNodesExplored())));
-            } else {
-              emitter.send(
-                  SseEmitter.event().name("result").data(objectMapper.writeValueAsString(result)));
+            if (cache != null) {
+              cache.put(cacheKey, result);
             }
+            sendResult(emitter, result);
             emitter.complete();
           } catch (ClientDisconnectedException e) {
             // Client disconnected mid-BFS; just complete the emitter silently.
@@ -149,6 +165,45 @@ public class MyController {
         });
 
     return emitter;
+  }
+
+  private void sendResult(SseEmitter emitter, BFSResult result) throws IOException {
+    if (result.getPath() == null) {
+      emitter.send(
+          SseEmitter.event()
+              .name("result")
+              .data(
+                  Map.of(
+                      "message",
+                      "No path found or query took too long",
+                      "nodesExplored",
+                      result.getNodesExplored())));
+    } else {
+      emitter.send(SseEmitter.event().name("result").data(objectMapper.writeValueAsString(result)));
+    }
+  }
+
+  private String normalizeWikipediaUrl(String input) {
+    if (input == null) {
+      return null;
+    }
+    String trimmed = input.trim();
+    if (trimmed.isEmpty()) {
+      return trimmed;
+    }
+    if (trimmed.startsWith("http://")) {
+      trimmed = "https://" + trimmed.substring("http://".length());
+    }
+    if (trimmed.startsWith("https://")) {
+      return trimmed.replace(" ", "_");
+    }
+    if (trimmed.startsWith("en.wikipedia.org/wiki/")) {
+      return ("https://" + trimmed).replace(" ", "_");
+    }
+    if (trimmed.startsWith("/wiki/")) {
+      return ("https://en.wikipedia.org" + trimmed).replace(" ", "_");
+    }
+    return (WIKI_URL_PREFIX + trimmed.replace(" ", "_"));
   }
 
   /** Thrown inside the BFS progress callback to abort BFS when the client has disconnected. */
