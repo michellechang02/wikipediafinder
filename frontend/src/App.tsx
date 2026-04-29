@@ -75,7 +75,7 @@ function App() {
             setErrorMessage(data.error || "An error occurred.");
             setIsLoading(false);
             return;
-          } catch (_) {
+          } catch {
             // non-JSON error event — connection failed, try next endpoint
           }
         }
