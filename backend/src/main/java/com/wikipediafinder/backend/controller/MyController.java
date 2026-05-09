@@ -68,15 +68,21 @@ public class MyController {
     try {
       String normalizedStart = normalizeWikipediaUrl(startinglink);
       String normalizedEnd = normalizeWikipediaUrl(endinglink);
+      String cacheKey = normalizedStart + "->" + normalizedEnd;
+      Cache cache = cacheManager.getCache("pathStatsCache");
+      if (cache != null) {
+        BFSResult cachedResult = cache.get(cacheKey, BFSResult.class);
+        if (cachedResult != null) {
+          return buildResultsResponse(cachedResult);
+        }
+      }
       BFSResult result =
           bfs.getPathWithStats(new PageNode(normalizedStart), new PageNode(normalizedEnd));
-
-      if (result.getPath() == null) {
-        return new ResponseEntity<>(
-            Map.of("message", "No path found or query took too long"), HttpStatus.OK);
+      if (cache != null) {
+        cache.put(cacheKey, result);
       }
 
-      return new ResponseEntity<>(result, HttpStatus.OK);
+      return buildResultsResponse(result);
     } catch (IllegalArgumentException e) {
       return new ResponseEntity<>(Map.of("error", e.getMessage()), HttpStatus.BAD_REQUEST);
     }
@@ -181,6 +187,14 @@ public class MyController {
     } else {
       emitter.send(SseEmitter.event().name("result").data(objectMapper.writeValueAsString(result)));
     }
+  }
+
+  private ResponseEntity<Object> buildResultsResponse(BFSResult result) {
+    if (result.getPath() == null) {
+      return new ResponseEntity<>(
+          Map.of("message", "No path found or query took too long"), HttpStatus.OK);
+    }
+    return new ResponseEntity<>(result, HttpStatus.OK);
   }
 
   private String normalizeWikipediaUrl(String input) {
