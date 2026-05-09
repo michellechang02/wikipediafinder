@@ -68,9 +68,10 @@ public class MyController {
     try {
       String normalizedStart = normalizeWikipediaUrl(startinglink);
       String normalizedEnd = normalizeWikipediaUrl(endinglink);
-      String cacheKey = buildCacheKey(normalizedStart, normalizedEnd);
       Cache cache = cacheManager.getCache("pathStatsCache");
+      String cacheKey = null;
       if (cache != null) {
+        cacheKey = buildCacheKey(normalizedStart, normalizedEnd);
         BFSResult cachedResult = cache.get(cacheKey, BFSResult.class);
         if (cachedResult != null) {
           return buildResultsResponse(cachedResult);
@@ -111,9 +112,10 @@ public class MyController {
           try {
             String normalizedStart = normalizeWikipediaUrl(startinglink);
             String normalizedEnd = normalizeWikipediaUrl(endinglink);
-            String cacheKey = buildCacheKey(normalizedStart, normalizedEnd);
             Cache cache = cacheManager.getCache("pathStatsCache");
+            String cacheKey = null;
             if (cache != null) {
+              cacheKey = buildCacheKey(normalizedStart, normalizedEnd);
               BFSResult cachedResult = cache.get(cacheKey, BFSResult.class);
               if (cachedResult != null) {
                 emitter.send(
