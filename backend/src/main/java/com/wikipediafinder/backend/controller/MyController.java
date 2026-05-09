@@ -68,7 +68,7 @@ public class MyController {
     try {
       String normalizedStart = normalizeWikipediaUrl(startinglink);
       String normalizedEnd = normalizeWikipediaUrl(endinglink);
-      String cacheKey = normalizedStart + "->" + normalizedEnd;
+      String cacheKey = buildCacheKey(normalizedStart, normalizedEnd);
       Cache cache = cacheManager.getCache("pathStatsCache");
       if (cache != null) {
         BFSResult cachedResult = cache.get(cacheKey, BFSResult.class);
@@ -78,7 +78,7 @@ public class MyController {
       }
       PageNode start = new PageNode(normalizedStart);
       PageNode end = new PageNode(normalizedEnd);
-      BFSResult result = bfs.getPathWithStats(start, end, PageNode::new, null);
+      BFSResult result = bfs.getPathWithStats(start, end, PageNode::new);
       if (cache != null && result.getPath() != null) {
         cache.put(cacheKey, result);
       }
@@ -111,7 +111,7 @@ public class MyController {
           try {
             String normalizedStart = normalizeWikipediaUrl(startinglink);
             String normalizedEnd = normalizeWikipediaUrl(endinglink);
-            String cacheKey = normalizedStart + "->" + normalizedEnd;
+            String cacheKey = buildCacheKey(normalizedStart, normalizedEnd);
             Cache cache = cacheManager.getCache("pathStatsCache");
             if (cache != null) {
               BFSResult cachedResult = cache.get(cacheKey, BFSResult.class);
@@ -196,6 +196,10 @@ public class MyController {
           Map.of("message", "No path found or query took too long"), HttpStatus.OK);
     }
     return new ResponseEntity<>(result, HttpStatus.OK);
+  }
+
+  private String buildCacheKey(String normalizedStart, String normalizedEnd) {
+    return normalizedStart + "->" + normalizedEnd;
   }
 
   private String normalizeWikipediaUrl(String input) {

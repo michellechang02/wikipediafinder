@@ -44,7 +44,7 @@ public class MyControllerTest {
 
   @Test
   public void getResultsReturnsPathWhenFound() throws Exception {
-    when(bfs.getPathWithStats(any(PageNode.class), any(PageNode.class), any(), any()))
+    when(bfs.getPathWithStats(any(PageNode.class), any(PageNode.class), any()))
         .thenReturn(
             new BFSResult(
                 Arrays.asList("https://en.wikipedia.org/wiki/A", "https://en.wikipedia.org/wiki/B"),
@@ -87,7 +87,7 @@ public class MyControllerTest {
 
   @Test
   public void getResultsReturnsMessageWhenNoPath() throws Exception {
-    when(bfs.getPathWithStats(any(PageNode.class), any(PageNode.class), any(), any()))
+    when(bfs.getPathWithStats(any(PageNode.class), any(PageNode.class), any()))
         .thenReturn(new BFSResult(null, 1000));
 
     mockMvc
@@ -101,7 +101,7 @@ public class MyControllerTest {
 
   @Test
   public void getResultsReturnsBadRequestWhenBfsThrows() throws Exception {
-    when(bfs.getPathWithStats(any(PageNode.class), any(PageNode.class), any(), any()))
+    when(bfs.getPathWithStats(any(PageNode.class), any(PageNode.class), any()))
         .thenThrow(new IllegalArgumentException("invalid input"));
 
     mockMvc
