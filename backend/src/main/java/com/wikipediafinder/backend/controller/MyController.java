@@ -69,9 +69,8 @@ public class MyController {
       String normalizedStart = normalizeWikipediaUrl(startinglink);
       String normalizedEnd = normalizeWikipediaUrl(endinglink);
       Cache cache = cacheManager.getCache("pathStatsCache");
-      String cacheKey = null;
       if (cache != null) {
-        cacheKey = buildCacheKey(normalizedStart, normalizedEnd);
+        String cacheKey = buildCacheKey(normalizedStart, normalizedEnd);
         BFSResult cachedResult = cache.get(cacheKey, BFSResult.class);
         if (cachedResult != null) {
           return buildResultsResponse(cachedResult);
@@ -81,7 +80,7 @@ public class MyController {
       PageNode end = new PageNode(normalizedEnd);
       BFSResult result = bfs.getPathWithStats(start, end, PageNode::new);
       if (cache != null && result.getPath() != null) {
-        cache.put(cacheKey, result);
+        cache.put(buildCacheKey(normalizedStart, normalizedEnd), result);
       }
 
       return buildResultsResponse(result);
@@ -113,9 +112,8 @@ public class MyController {
             String normalizedStart = normalizeWikipediaUrl(startinglink);
             String normalizedEnd = normalizeWikipediaUrl(endinglink);
             Cache cache = cacheManager.getCache("pathStatsCache");
-            String cacheKey = null;
             if (cache != null) {
-              cacheKey = buildCacheKey(normalizedStart, normalizedEnd);
+              String cacheKey = buildCacheKey(normalizedStart, normalizedEnd);
               BFSResult cachedResult = cache.get(cacheKey, BFSResult.class);
               if (cachedResult != null) {
                 emitter.send(
@@ -154,7 +152,7 @@ public class MyController {
                     });
 
             if (cache != null) {
-              cache.put(cacheKey, result);
+              cache.put(buildCacheKey(normalizedStart, normalizedEnd), result);
             }
             sendResult(emitter, result);
             emitter.complete();
