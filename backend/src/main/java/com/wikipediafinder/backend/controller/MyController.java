@@ -76,9 +76,10 @@ public class MyController {
           return buildResultsResponse(cachedResult);
         }
       }
-      BFSResult result =
-          bfs.getPathWithStats(new PageNode(normalizedStart), new PageNode(normalizedEnd));
-      if (cache != null) {
+      PageNode start = new PageNode(normalizedStart);
+      PageNode end = new PageNode(normalizedEnd);
+      BFSResult result = bfs.getPathWithStats(start, end, PageNode::new, null);
+      if (cache != null && result.getPath() != null) {
         cache.put(cacheKey, result);
       }
 
