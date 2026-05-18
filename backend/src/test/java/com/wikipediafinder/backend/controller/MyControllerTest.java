@@ -1,6 +1,8 @@
 package com.wikipediafinder.backend.controller;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
@@ -15,6 +17,8 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.cache.Cache;
+import org.springframework.cache.CacheManager;
 import org.springframework.test.web.servlet.MockMvc;
 
 /**
@@ -28,6 +32,8 @@ public class MyControllerTest {
 
   @MockBean private BFS bfs;
 
+  @MockBean private CacheManager cacheManager;
+
   @Test
   public void healthEndpointReturnsOk() throws Exception {
     mockMvc
@@ -38,7 +44,7 @@ public class MyControllerTest {
 
   @Test
   public void getResultsReturnsPathWhenFound() throws Exception {
-    when(bfs.getPathWithStats(any(PageNode.class), any(PageNode.class)))
+    when(bfs.getPathWithStats(any(PageNode.class), any(PageNode.class), any()))
         .thenReturn(
             new BFSResult(
                 Arrays.asList("https://en.wikipedia.org/wiki/A", "https://en.wikipedia.org/wiki/B"),
@@ -56,8 +62,32 @@ public class MyControllerTest {
   }
 
   @Test
+  public void getResultsShortCircuitsBfsWhenCacheHit() throws Exception {
+    Cache cache = mock(Cache.class);
+    BFSResult cachedResult =
+        new BFSResult(
+            Arrays.asList("https://en.wikipedia.org/wiki/A", "https://en.wikipedia.org/wiki/B"), 2);
+    when(cacheManager.getCache("pathStatsCache")).thenReturn(cache);
+    when(cache.get(
+            "https://en.wikipedia.org/wiki/A->https://en.wikipedia.org/wiki/B", BFSResult.class))
+        .thenReturn(cachedResult);
+
+    mockMvc
+        .perform(
+            get("/api/getResults")
+                .param("startinglink", "https://en.wikipedia.org/wiki/A")
+                .param("endinglink", "https://en.wikipedia.org/wiki/B"))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.path[0]").value("https://en.wikipedia.org/wiki/A"))
+        .andExpect(jsonPath("$.path[1]").value("https://en.wikipedia.org/wiki/B"))
+        .andExpect(jsonPath("$.nodesExplored").value(2));
+
+    verifyNoInteractions(bfs);
+  }
+
+  @Test
   public void getResultsReturnsMessageWhenNoPath() throws Exception {
-    when(bfs.getPathWithStats(any(PageNode.class), any(PageNode.class)))
+    when(bfs.getPathWithStats(any(PageNode.class), any(PageNode.class), any()))
         .thenReturn(new BFSResult(null, 1000));
 
     mockMvc
@@ -71,7 +101,7 @@ public class MyControllerTest {
 
   @Test
   public void getResultsReturnsBadRequestWhenBfsThrows() throws Exception {
-    when(bfs.getPathWithStats(any(PageNode.class), any(PageNode.class)))
+    when(bfs.getPathWithStats(any(PageNode.class), any(PageNode.class), any()))
         .thenThrow(new IllegalArgumentException("invalid input"));
 
     mockMvc

@@ -1,5 +1,4 @@
 import { useState } from "react";
-import axios from "axios";
 import { Analytics } from '@vercel/analytics/react';
 import { ResultsList } from "./components/ResultsList";
 
@@ -9,65 +8,116 @@ function App() {
   const [endingLink, setEndingLink] = useState<string>("");
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [nodesExplored, setNodesExplored] = useState<number>(0);
+  const [errorMessage, setErrorMessage] = useState<string>("");
   const currentYear = new Date().getFullYear();
   const copyrightText = `© ${currentYear} All rights reserved`;
 
-  const fetchResults = async () => {
-    const endpoints = [
-      "https://wikipediafinder.onrender.com/api/getResults",
-      "http://localhost:8080/api/getResults"
-    ];
-    let lastError = null;
-    setIsLoading(true);
-    setNodesExplored(0);
-    for (const endpoint of endpoints) {
-      try {
-        const response = await axios.get(endpoint, {
-          params: {
-            startinglink: `https://en.wikipedia.org/wiki/${startingLink.replace(/\s+/g, "_").replace(/\b\w/g, char => char.toUpperCase())}`,
-            endinglink: `https://en.wikipedia.org/wiki/${endingLink.replace(/\s+/g, "_").replace(/\b\w/g, char => char.toUpperCase())}`,
-          },
-          timeout: 60000,
-        });
-        if (response.data.nodesExplored) {
-          setNodesExplored(response.data.nodesExplored);
-        }
-        if (response.data.message) {
-          setResults([]);
-        } else {
-          setResults(response.data.path || response.data);
-        }
-        lastError = null;
-        break; // Success, exit loop
-      } catch (error) {
-        lastError = error;
-        continue; // Try next endpoint
-      }
+  const buildWikiUrl = (topic: string) => {
+    const trimmed = topic.trim();
+    if (!trimmed) {
+      return "";
     }
-    if (lastError) {
-      if (lastError instanceof Error) {
-        console.error("Error fetching results:", lastError.message);
-      } else {
-        console.error("Unexpected error fetching results:", lastError);
-      }
+    const httpPrefix = "http://";
+    const httpsPrefix = "https://";
+    const sanitized = trimmed.replace(/\s+/g, "_");
+    if (sanitized.startsWith(httpPrefix)) {
+      return `${httpsPrefix}${sanitized.slice(httpPrefix.length)}`;
     }
-    setIsLoading(false);
+    if (sanitized.startsWith(httpsPrefix)) {
+      return sanitized;
+    }
+    if (sanitized.startsWith("en.wikipedia.org/wiki/")) {
+      return `${httpsPrefix}${sanitized}`;
+    }
+    if (sanitized.startsWith("/wiki/")) {
+      return `https://en.wikipedia.org${sanitized}`;
+    }
+    return `https://en.wikipedia.org/wiki/${sanitized}`;
   };
 
-  const handleQuery = async () => {
+  const fetchResults = () => {
+    const streamEndpoints = [
+      "https://wikipediafinder.onrender.com/api/getResultsStream",
+      "http://localhost:8080/api/getResultsStream",
+    ];
+    const params = new URLSearchParams({
+      startinglink: buildWikiUrl(startingLink),
+      endinglink: buildWikiUrl(endingLink),
+    });
+
+    setIsLoading(true);
+    setResults([]);
+    setNodesExplored(0);
+    setErrorMessage("");
+
+    let tried = 0;
+    const tryEndpoint = (index: number) => {
+      if (index >= streamEndpoints.length) {
+        setErrorMessage("Could not reach any backend endpoint.");
+        setIsLoading(false);
+        return;
+      }
+
+      const url = `${streamEndpoints[index]}?${params}`;
+      const es = new EventSource(url);
+
+      es.addEventListener("progress", (e) => {
+        const data = JSON.parse(e.data);
+        if (data.nodesExplored !== undefined) {
+          setNodesExplored(data.nodesExplored);
+        }
+      });
+
+      es.addEventListener("result", (e) => {
+        es.close();
+        const data = JSON.parse(e.data);
+        if (data.message) {
+          setResults([]);
+          setErrorMessage(data.message);
+          if (data.nodesExplored !== undefined) {
+            setNodesExplored(data.nodesExplored);
+          }
+        } else {
+          setResults(data.path || []);
+          if (data.nodesExplored !== undefined) {
+            setNodesExplored(data.nodesExplored);
+          }
+        }
+        setIsLoading(false);
+      });
+
+      es.addEventListener("error", (e) => {
+        es.close();
+        // Try to parse structured error; otherwise fall back to next endpoint.
+        if (e instanceof MessageEvent && e.data) {
+          try {
+            const data = JSON.parse(e.data);
+            setErrorMessage(data.error || "An error occurred.");
+            setIsLoading(false);
+            return;
+          } catch {
+            // non-JSON error event — connection failed, try next endpoint
+          }
+        }
+        tried++;
+        if (tried < streamEndpoints.length) {
+          tryEndpoint(tried);
+        } else {
+          setErrorMessage("Could not reach any backend endpoint.");
+          setIsLoading(false);
+        }
+      });
+    };
+
+    tryEndpoint(tried);
+  };
+
+  const handleQuery = () => {
     if (!startingLink || !endingLink) {
       console.error("Both starting and ending links are required.");
       return;
     }
-    try {
-      await fetchResults();
-    } catch (error) {
-      if (error instanceof Error) {
-        console.error("Unexpected error:", error.message);
-      } else {
-        console.error("Unexpected error:", error);
-      }
-    }
+    fetchResults();
   };
 
   return (
@@ -183,16 +233,30 @@ function App() {
 
           {/* Results Section */}
           <div className="lg:w-1/2">
-            {(isLoading || results.length > 0) && (
+            {(isLoading || results.length > 0 || errorMessage) && (
               <div className="bg-gradient-to-br from-white/95 via-white/90 to-purple-50/90 backdrop-blur-sm shadow-xl rounded-3xl p-8 border border-purple-100 hover:shadow-2xl hover:scale-[1.02] transition-all duration-300">
                 {isLoading ? (
                   <div className="text-center">
                     <p className="text-xl font-semibold bg-gradient-to-r from-pink-600 to-pink-800 text-transparent bg-clip-text">
                       Exploring Wikipedia using BFS...
                     </p>
+                    {nodesExplored > 0 && (
+                      <p className="mt-3 text-sm font-medium text-gray-500">
+                        Nodes explored so far: <span className="font-bold text-purple-700">{nodesExplored}</span>
+                      </p>
+                    )}
                     <div className="mt-6 flex justify-center">
                       <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-b-4 border-purple-800"></div>
                     </div>
+                  </div>
+                ) : errorMessage ? (
+                  <div className="text-center">
+                    <p className="text-lg font-semibold text-red-500">{errorMessage}</p>
+                    {nodesExplored > 0 && (
+                      <p className="mt-2 text-sm text-gray-500">
+                        BFS explored {nodesExplored} nodes before giving up.
+                      </p>
+                    )}
                   </div>
                 ) : (
                   <>
