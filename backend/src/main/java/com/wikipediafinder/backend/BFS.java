@@ -23,7 +23,7 @@ public class BFS implements BFSInterface {
   /**
    * Instance method: find the shortest path (list of URLs) from {@code start} to {@code end}.
    *
-   * <p>The algorithm performs a breadth-first search with a cap of 1000 expanded nodes to avoid
+   * <p>The algorithm performs a breadth-first search with a cap of 10000 expanded nodes to avoid
    * long-running queries. When the start and end URLs are equal, a singleton list containing the
    * start URL is returned.
    *
@@ -69,7 +69,7 @@ public class BFS implements BFSInterface {
     queue.add(startUrl);
     discovered.add(startUrl);
     int nodeCnt = 0;
-    while (!queue.isEmpty() && nodeCnt < 1000) {
+    while (!queue.isEmpty() && nodeCnt < 10000) {
       String currentUrl = queue.poll();
       nodeCnt++;
       // Fetch outgoing links (cache per URL)
@@ -150,7 +150,7 @@ public class BFS implements BFSInterface {
     queue.add(startUrl);
     discovered.add(startUrl);
     int nodeCnt = 0;
-    while (!queue.isEmpty() && nodeCnt < 1000) {
+    while (!queue.isEmpty() && nodeCnt < 10000) {
       String currentUrl = queue.poll();
       nodeCnt++;
       if (progressCallback != null) {
