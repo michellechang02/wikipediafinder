@@ -10,6 +10,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import com.wikipediafinder.backend.BFS;
 import com.wikipediafinder.backend.BFSResult;
 import com.wikipediafinder.backend.PageNode;
+import com.wikipediafinder.backend.logging.BackendLogger;
 import java.util.Arrays;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,6 +28,8 @@ public class MyControllerTest {
   @Autowired private MockMvc mockMvc;
 
   @MockBean private BFS bfs;
+
+  @MockBean private BackendLogger backendLogger;
 
   @Test
   public void healthEndpointReturnsOk() throws Exception {
